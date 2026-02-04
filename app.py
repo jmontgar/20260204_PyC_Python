@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 # --- CONFIGURACIÓN GLOBAL ---
 st.set_page_config(page_title="Curso Python 2º Bach", layout="wide", page_icon="🐍")
 
-# --- ESTILOS CSS (Para que el editor de código se vea mejor) ---
+'''# --- ESTILOS CSS (Para que el editor de código se vea mejor) ---
 st.markdown("""
 <style>
     .stTextArea textarea { font-family: 'Consolas', monospace; font-size: 14px; background-color: #f0f2f6; }
 </style>
 """, unsafe_allow_html=True)
-
+'''
 # --- MOTOR DE EJECUCIÓN (SANDBOX HÍBRIDO TEXTO/GRÁFICOS) ---
 def ejecutar_codigo(codigo_usuario):
     buffer = io.StringIO()
