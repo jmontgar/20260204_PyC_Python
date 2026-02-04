@@ -6,50 +6,84 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- CONFIGURACIÓN ---
-st.set_page_config(page_title="Python 2º Bach - Prácticas", layout="wide", page_icon="🐍")
+# --- CONFIGURACIÓN GLOBAL ---
+st.set_page_config(page_title="Curso Python 2º Bach", layout="wide", page_icon="🐍")
 
-# --- ESTILOS CSS ---
+# --- ESTILOS CSS (Para que el editor de código se vea mejor) ---
 st.markdown("""
 <style>
-    .stTextArea textarea { font-family: 'Consolas', monospace; font-size: 14px; }
+    .stTextArea textarea { font-family: 'Consolas', monospace; font-size: 14px; background-color: #f0f2f6; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIÓN SANDBOX ---
+# --- MOTOR DE EJECUCIÓN (SANDBOX HÍBRIDO TEXTO/GRÁFICOS) ---
 def ejecutar_codigo(codigo_usuario):
     buffer = io.StringIO()
+    # Limpiamos gráficas anteriores
     plt.clf()
     fig = plt.figure()
     
     with contextlib.redirect_stdout(buffer):
         try:
+            # Entorno con librerías disponibles
             local_scope = {"random": random, "np": np, "plt": plt}
             exec(codigo_usuario, {}, local_scope)
             
+            # Detectamos si se ha generado una gráfica
             if len(plt.gcf().axes) > 0:
                 return fig, "plot"
+            
+            # Si no, devolvemos el texto
             return buffer.getvalue(), "success"
         except Exception as e:
-            return f"⚠️ Error: {e}", "error"
+            return f"⚠️ Error de ejecución: {e}", "error"
 
-# --- BARRA LATERAL ---
-st.sidebar.title("📚 Temario")
-tema = st.sidebar.radio("Ir a:", 
-    ["1. Condicionales (If/Else)", 
-     "2. Bucles (While/For)", 
-     "3. Funciones y Modularidad"])
+# --- BARRA LATERAL (MENÚ PRINCIPAL) ---
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c3/Python-logo-notext.svg", width=80)
+st.sidebar.title("📚 Temario 2º Bach")
 
-st.sidebar.info("💡 **Nota sobre `input()`:** En este simulador web no podemos detener el programa para pedir datos. En su lugar, **declara variables** al inicio del código para simular la entrada del usuario.")
+seccion = st.sidebar.radio("Navegación:", 
+    ["1. Introducción y Variables", 
+     "2. Condicionales (If/Else)", 
+     "3. Bucles (While/For)",
+     "4. Listas y Colecciones",
+     "5. Funciones y Proyectos",
+     "6. Laboratorio Matemático (Gráficas)",
+     "7. Reto Final Hacker"])
 
-# ==========================================
-# TEMA 1: CONDICIONALES
-# ==========================================
-if tema == "1. Condicionales (If/Else)":
-    st.header("1. Estructuras de Control Condicionales")
+st.sidebar.markdown("---")
+st.sidebar.info("💡 **Nota:** `input()` no funciona en web. Usa variables fijas para simular la entrada de datos.")
+
+# ==============================================================================
+# SECCIÓN 1: INTRODUCCIÓN
+# ==============================================================================
+if seccion == "1. Introducción y Variables":
+    st.header("1. Variables y Tipos de Datos")
+    st.markdown("🔗 **Teoría:** [W3Schools Variables](https://www.w3schools.com/python/python_variables.asp)")
     
-    # Selector de ejercicios
-    ejercicio = st.selectbox("Selecciona la actividad:", [
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        Python detecta el tipo de dato automáticamente:
+        * `int` (Enteros): `edad = 18`
+        * `float` (Decimales): `media = 9.5`
+        * `str` (Texto): `nombre = "Ana"`
+        """)
+    with col2:
+        st.info("📝 **Práctica:** Define base y altura y calcula el área del triángulo.")
+        codigo = st.text_area("Editor:", value="base = 10\naltura = 5\n# area = ...\nprint(area)", height=200)
+        if st.button("▶️ Ejecutar Intro"):
+            res, tipo = ejecutar_codigo(codigo)
+            st.code(res) if tipo == "success" else st.error(res)
+
+# ==============================================================================
+# SECCIÓN 2: CONDICIONALES (AMPLIADO)
+# ==============================================================================
+elif seccion == "2. Condicionales (If/Else)":
+    st.header("2. Lógica y Decisiones")
+    st.markdown("🔗 **Teoría:** [W3Schools If...Else](https://www.w3schools.com/python/python_conditions.asp)")
+    
+    actividad = st.selectbox("Selecciona ejercicio:", [
         "1. Mayor de edad (Solo IF)",
         "2. Menor de edad (IF / ELSE)",
         "3. Etapas de la vida (ELIF)",
@@ -58,157 +92,199 @@ if tema == "1. Condicionales (If/Else)":
         "6. IF Anidados (Carnet de conducir)",
         "7. El mayor de 3 números"
     ])
-
+    
     st.markdown("---")
-
-    codigo_inicial = ""
-    enunciado = ""
-
-    if ejercicio == "1. Mayor de edad (Solo IF)":
-        enunciado = "Comprueba si la variable `edad` es mayor o igual a 18. Si lo es, imprime 'Es mayor de edad'. (No hagas nada si es menor)."
-        codigo_inicial = "edad = 19\n\nif edad >= 18:\n    # Tu código aquí\n    pass"
-
-    elif ejercicio == "2. Menor de edad (IF / ELSE)":
-        enunciado = "Si es menor de 18 imprime 'Es menor', si no, imprime 'Es mayor'."
-        codigo_inicial = "edad = 15\n\nif edad < 18:\n    print(\"Es menor\")\nelse:\n    # Tu código aquí\n    pass"
-
-    elif ejercicio == "3. Etapas de la vida (ELIF)":
-        enunciado = "Clasifica: <12 'Niño', <18 'Adolescente', <65 'Adulto', resto 'Jubilado'."
-        codigo_inicial = "edad = 45\n\nif edad < 12:\n    print(\"Niño\")\nelif edad < 18:\n    print(\"Adolescente\")\n# Completa el resto..."
-
-    elif ejercicio == "4. Condiciones Encadenadas (AND / OR)":
-        enunciado = "Para entrar VIP se necesita: ser mayor de 18 **Y** tener entrada VIP. O bien, conocer al dueño (variable `conoce_dueno`)."
-        codigo_inicial = "edad = 20\ntiene_vip = False\nconoce_dueno = True\n\n# Usa and / or\nif (edad >= 18 and tiene_vip) or conoce_dueno:\n    print(\"Entra al VIP\")\nelse:\n    print(\"Fuera\")"
-
-    elif ejercicio == "5. Pedir edad al usuario (Simulado)":
-        enunciado = "**IMPORTANTE:** En web no funciona `input()`. Simulamos que el usuario escribe cambiando la variable `entrada_usuario`."
-        codigo_inicial = "# Simulamos: edad = int(input('Dime tu edad'))\nentrada_usuario = \"25\" # Cambia este valor para probar\n\nedad = int(entrada_usuario)\n\nif edad >= 18:\n    print(f\"Tienes {edad} años, eres mayor.\")"
-
-    elif ejercicio == "6. IF Anidados (Carnet de conducir)":
-        enunciado = "Primero mira si tiene 18 años. SI LOS TIENE, mira si tiene carnet. Si no tiene 18, di que es muy joven."
-        codigo_inicial = "edad = 19\ntiene_carnet = False\n\nif edad >= 18:\n    print(\"Tienes edad...\")\n    # IF ANIDADO AQUÍ\n    if tiene_carnet:\n        print(\"Puedes conducir\")\n    else:\n        print(\"Te falta el carnet\")\nelse:\n    print(\"Eres muy joven\")"
-
-    elif ejercicio == "7. El mayor de 3 números":
-        enunciado = "Dadas tres variables n1, n2, n3, imprime cuál es el número más grande."
-        codigo_inicial = "n1 = 10\nn2 = 50\nn3 = 20\n\nif n1 > n2 and n1 > n3:\n    print(f\"El mayor es {n1}\")\nelif n2 > n1 and n2 > n3:\n    print(f\"El mayor es {n2}\")\nelse:\n    print(f\"El mayor es {n3}\")"
-
-    st.info(f"📝 **Tarea:** {enunciado}")
-    texto_codigo = st.text_area("Editor:", value=codigo_inicial, height=250)
+    codigo_init = ""
     
-    if st.button("▶️ Ejecutar"):
-        res, tipo = ejecutar_codigo(texto_codigo)
-        st.code(res) if tipo == "success" else st.error(res)
+    if "1." in actividad:
+        st.write("**Enunciado:** Si `edad >= 18` imprime 'Mayor'.")
+        codigo_init = "edad = 19\nif edad >= 18:\n    print('Es mayor')"
+    elif "2." in actividad:
+        st.write("**Enunciado:** Si `edad < 18` imprime 'Menor', si no 'Mayor'.")
+        codigo_init = "edad = 15\nif edad < 18:\n    print('Menor')\nelse:\n    print('Mayor')"
+    elif "3." in actividad:
+        st.write("**Enunciado:** Clasifica en Niño (<12), Adolescente (<18) o Adulto.")
+        codigo_init = "edad = 45\nif edad < 12:\n    print('Niño')\nelif edad < 18:\n    print('Adolescente')\nelse:\n    print('Adulto')"
+    elif "4." in actividad:
+        st.write("**Enunciado:** Entra si (Mayor 18 Y tiene entrada) O (Conoce al dueño).")
+        codigo_init = "edad = 20\ntiene_entrada = False\nconoce_dueno = True\n\nif (edad >= 18 and tiene_entrada) or conoce_dueno:\n    print('Entra')\nelse:\n    print('Fuera')"
+    elif "5." in actividad:
+        st.write("**Truco:** Cambia la variable `entrada` para simular que escribes.")
+        codigo_init = "entrada = '25' # Cambia esto\nedad = int(entrada)\nif edad >= 18:\n    print(f'Tienes {edad} años')"
+    elif "6." in actividad:
+        st.write("**Enunciado:** Primero comprueba edad. SI es mayor, comprueba carnet.")
+        codigo_init = "edad = 19\ncarnet = False\nif edad >= 18:\n    if carnet:\n        print('Conduce')\n    else:\n        print('Te falta carnet')\nelse:\n    print('Muy joven')"
+    elif "7." in actividad:
+        st.write("**Enunciado:** Compara n1, n2 y n3 y di el mayor.")
+        codigo_init = "n1, n2, n3 = 10, 50, 20\nif n1 > n2 and n1 > n3:\n    print(n1)\nelif n2 > n1 and n2 > n3:\n    print(n2)\nelse:\n    print(n3)"
 
-
-# ==========================================
-# TEMA 2: BUCLES
-# ==========================================
-elif tema == "2. Bucles (While/For)":
-    st.header("2. Bucles e Iteraciones")
-    
-    tipo_bucle = st.radio("Tipo de bucle:", ["Bucle WHILE", "Bucle FOR"], horizontal=True)
-    
-    if tipo_bucle == "Bucle WHILE":
-        ejercicio = st.selectbox("Ejercicios While:", [
-            "1. Números del 0 al 10",
-            "2. Imprimir 15 números",
-            "3. Imprimir 15 números pares",
-            "4. Menú de calculadora (Salir con 0)"
-        ])
-        
-        codigo_inicial = ""
-        if ejercicio == "1. Números del 0 al 10":
-            codigo_inicial = "i = 0\nwhile i <= 10:\n    print(i)\n    i = i + 1"
-        elif ejercicio == "2. Imprimir 15 números":
-            codigo_inicial = "contador = 1\nwhile contador <= 15:\n    print(f\"Número: {contador}\")\n    contador += 1"
-        elif ejercicio == "3. Imprimir 15 números pares":
-            codigo_inicial = "contador = 0\npares_encontrados = 0\n\nwhile pares_encontrados < 15:\n    if contador % 2 == 0:\n        print(contador)\n        pares_encontrados += 1\n    contador += 1"
-        elif ejercicio == "4. Menú de calculadora (Salir con 0)":
-            codigo_inicial = "# Simulamos un menú que se repite 3 veces para no colgar la web\nintentos = 0\nopcion = 1\n\nwhile opcion != 0 and intentos < 5:\n    print(\"--- MENÚ ---\")\n    print(\"1. Sumar\")\n    print(\"0. Salir\")\n    \n    # Simulamos que el usuario elige 1, luego 1, luego 0\n    if intentos < 2: \n        opcion = 1\n        print(\"Usuario elige: 1\")\n    else: \n        opcion = 0\n        print(\"Usuario elige: 0\")\n        \n    if opcion == 1:\n        print(\"Sumando...\")\n    elif opcion == 0:\n        print(\"Adiós\")\n    \n    intentos += 1"
-
-    else: # Bucle FOR
-        ejercicio = st.selectbox("Ejercicios For:", [
-            "1. Los 10 primeros números",
-            "2. Hasta número dado por usuario",
-            "3. Desde... Hasta... (Usuario)",
-            "4. Saltando de 2 en 2",
-            "5. Buscar valor en lista (Break)",
-            "6. Recorrer dos listas a la vez"
-        ])
-        
-        codigo_inicial = ""
-        if ejercicio == "1. Los 10 primeros números":
-            codigo_inicial = "for i in range(1, 11):\n    print(i)"
-        elif ejercicio == "2. Hasta número dado por usuario":
-            codigo_inicial = "limite = 8 # Simula input\nfor i in range(limite):\n    print(i)"
-        elif ejercicio == "3. Desde... Hasta... (Usuario)":
-            codigo_inicial = "inicio = 5\nfin = 12\nfor i in range(inicio, fin + 1):\n    print(i)"
-        elif ejercicio == "4. Saltando de 2 en 2":
-            codigo_inicial = "# range(inicio, fin, salto)\nfor i in range(0, 21, 2):\n    print(i)"
-        elif ejercicio == "5. Buscar valor en lista (Break)":
-            codigo_inicial = "lista = [10, 50, 33, 90, 20]\nbuscado = 33\n\nfor numero in lista:\n    print(f\"Mirando el {numero}...\")\n    if numero == buscado:\n        print(\"¡ENCONTRADO!\")\n        break # Termina el bucle al encontrarlo"
-        elif ejercicio == "6. Recorrer dos listas a la vez":
-            codigo_inicial = "alumnos = [\"Ana\", \"Luis\", \"Eva\"]\nnotas = [8, 5, 9]\n\n# zip une las dos listas\nfor alumno, nota in zip(alumnos, notas):\n    print(f\"{alumno} ha sacado un {nota}\")"
-
-    st.write("---")
-    texto_codigo = st.text_area("Editor:", value=codigo_inicial, height=250)
-    if st.button("▶️ Ejecutar Bucle"):
-        res, tipo = ejecutar_codigo(texto_codigo)
+    texto = st.text_area("Código:", value=codigo_init, height=250)
+    if st.button("▶️ Ejecutar Condicional"):
+        res, tipo = ejecutar_codigo(texto)
         st.code(res)
 
-
-# ==========================================
-# TEMA 3: FUNCIONES
-# ==========================================
-elif tema == "3. Funciones y Modularidad":
-    st.header("3. Funciones y Proyecto Cine")
+# ==============================================================================
+# SECCIÓN 3: BUCLES (AMPLIADO)
+# ==============================================================================
+elif seccion == "3. Bucles (While/For)":
+    st.header("3. Bucles e Iteraciones")
+    st.markdown("🔗 **Teoría:** [While Loops](https://www.w3schools.com/python/python_while_loops.asp) | [For Loops](https://www.w3schools.com/python/python_for_loops.asp)")
     
-    ejercicio = st.selectbox("Actividad:", [
-        "1. Función Suma (parámetros)",
-        "2. Función Menú (print)",
-        "3. PROYECTO: Gestión de Butacas"
-    ])
-
-    codigo_inicial = ""
+    tipo_bucle = st.radio("Elige tipo:", ["WHILE (Mientras...)", "FOR (Para cada...)"], horizontal=True)
     
-    if ejercicio == "1. Función Suma (parámetros)":
-        codigo_inicial = "def sumar(a, b):\n    resultado = a + b\n    return resultado\n\n# Llamada a la función\nn1 = 10\nn2 = 35\ntotal = sumar(n1, n2)\nprint(f\"La suma es {total}\")"
-        
-    elif ejercicio == "2. Función Menú (print)":
-        codigo_inicial = "def mostrar_menu():\n    print(\"1. Calcular\")\n    print(\"2. Ver resultados\")\n    print(\"3. Configuración\")\n    print(\"4. Salir\")\n\nprint(\"Bienvenido...\")\nmostrar_menu() # Llamada simple"
-        
-    elif ejercicio == "3. PROYECTO: Gestión de Butacas":
-        st.info("ℹ️ **Reto:** Completa las funciones para mostrar qué butacas están libres (0) y reservarlas (1).")
-        codigo_inicial = """# 0 = Libre, 1 = Ocupada
-butacas = [0, 0, 1, 0, 0] 
+    codigo_init = ""
+    
+    if "WHILE" in tipo_bucle:
+        actividad = st.selectbox("Ejercicios While:", [
+            "1. Contar 0 al 10",
+            "2. 15 números",
+            "3. 15 números pares",
+            "4. Menú Calculadora"
+        ])
+        if "1." in actividad: codigo_init = "i = 0\nwhile i <= 10:\n    print(i)\n    i += 1"
+        if "2." in actividad: codigo_init = "c = 1\nwhile c <= 15:\n    print(c)\n    c += 1"
+        if "3." in actividad: codigo_init = "c = 0\npares = 0\nwhile pares < 15:\n    if c % 2 == 0:\n        print(c)\n        pares += 1\n    c += 1"
+        if "4." in actividad: codigo_init = "opcion = 1\nintentos = 0\nwhile opcion != 0 and intentos < 3:\n    print('1. Sumar | 0. Salir')\n    opcion = 0 # Simulamos salir\n    intentos += 1"
+    
+    else: # FOR
+        actividad = st.selectbox("Ejercicios For:", [
+            "1. 10 primeros números",
+            "2. Hasta N (Usuario)",
+            "3. Desde A hasta B",
+            "4. De 2 en 2",
+            "5. Buscar y romper (Break)",
+            "6. Dos listas a la vez (Zip)"
+        ])
+        if "1." in actividad: codigo_init = "for i in range(1, 11):\n    print(i)"
+        if "2." in actividad: codigo_init = "n = 8\nfor i in range(n):\n    print(i)"
+        if "3." in actividad: codigo_init = "ini = 5\nfin = 10\nfor i in range(ini, fin+1):\n    print(i)"
+        if "4." in actividad: codigo_init = "for i in range(0, 21, 2):\n    print(i)"
+        if "5." in actividad: codigo_init = "lista = [10, 50, 90]\nbuscar = 50\nfor x in lista:\n    if x == buscar:\n        print('Encontrado')\n        break"
+        if "6." in actividad: codigo_init = "nombres = ['Ana', 'Luis']\nnotas = [8, 5]\nfor nom, nota in zip(nombres, notas):\n    print(f'{nom}: {nota}')"
 
-def mostrar_butacas():
-    print("Estado de la sala:")
-    for i in range(len(butacas)):
-        if butacas[i] == 0:
-            estado = "LIBRE"
-        else:
-            estado = "OCUPADA"
-        print(f"Butaca {i}: {estado}")
+    texto = st.text_area("Código:", value=codigo_init, height=250)
+    if st.button("▶️ Ejecutar Bucle"):
+        res, tipo = ejecutar_codigo(texto)
+        st.code(res)
 
-def reservar(numero_butaca):
-    # Comprueba si está libre (0)
-    if butacas[numero_butaca] == 0:
-        butacas[numero_butaca] = 1
-        print(f"✅ Butaca {numero_butaca} reservada con éxito.")
-    else:
-        print(f"❌ La butaca {numero_butaca} ya está ocupada.")
-
-# --- PRUEBAS ---
-mostrar_butacas()
-print("\\n--- Intentando reservar la 1 ---")
-reservar(1)
-print("\\n--- Intentando reservar la 2 (ya ocupada) ---")
-reservar(2)
-print("\\n")
-mostrar_butacas()"""
-
-    texto_codigo = st.text_area("Editor:", value=codigo_inicial, height=350)
-    if st.button("▶️ Ejecutar Función"):
-        res, tipo = ejecutar_codigo(texto_codigo)
+# ==============================================================================
+# SECCIÓN 4: LISTAS (VISUAL)
+# ==============================================================================
+elif seccion == "4. Listas y Colecciones":
+    st.header("4. Listas (Arrays)")
+    
+    col1, col2 = st.columns([1,1])
+    with col1:
+        st.markdown("**Mapa de Memoria:**")
+        st.code("notas = [5, 8, 9, 4]\nIndices: 0  1  2  3")
+    with col2:
+        st.info("📝 **Ejercicio:** Añade un 10 a la lista y calcula la media.")
+    
+    codigo = st.text_area("Código:", value="notas = [5, 6, 8]\n# notas.append(10)\n# media = sum(notas) / len(notas)\nprint(notas)", height=200)
+    if st.button("▶️ Ejecutar Listas"):
+        res, tipo = ejecutar_codigo(codigo)
         st.code(res) if tipo == "success" else st.error(res)
+
+# ==============================================================================
+# SECCIÓN 5: FUNCIONES
+# ==============================================================================
+elif seccion == "5. Funciones y Proyectos":
+    st.header("5. Funciones y Modularidad")
+    
+    actividad = st.selectbox("Actividad:", [
+        "1. Suma simple (parámetros)",
+        "2. Función Menú",
+        "3. PROYECTO: Reserva de Butacas"
+    ])
+    
+    codigo_init = ""
+    if "1." in actividad:
+        codigo_init = "def sumar(a, b):\n    return a + b\n\nprint(sumar(10, 5))"
+    elif "2." in actividad:
+        codigo_init = "def menu():\n    print('1. Jugar')\n    print('2. Salir')\n\nmenu()"
+    elif "3." in actividad:
+        st.warning("Completa la función reservar() para cambiar el 0 por 1.")
+        codigo_init = """butacas = [0, 0, 1, 0] # 0 Libre, 1 Ocupada
+
+def ver_sala():
+    for i, estado in enumerate(butacas):
+        texto = "LIBRE" if estado == 0 else "OCUPADA"
+        print(f"Butaca {i}: {texto}")
+
+def reservar(n):
+    if butacas[n] == 0:
+        butacas[n] = 1
+        print("Reservada!")
+    else:
+        print("Ya estaba ocupada")
+
+ver_sala()
+print("--- Reservando la 0 ---")
+reservar(0)
+ver_sala()"""
+
+    texto = st.text_area("Código:", value=codigo_init, height=300)
+    if st.button("▶️ Ejecutar Función"):
+        res, tipo = ejecutar_codigo(texto)
+        st.code(res)
+
+# ==============================================================================
+# SECCIÓN 6: GRÁFICAS MATEMÁTICAS
+# ==============================================================================
+elif seccion == "6. Laboratorio Matemático (Gráficas)":
+    st.header("📈 Laboratorio: NumPy y Matplotlib")
+    st.markdown("Genera gráficas de funciones continuas.")
+    
+    
+
+    st.info("📝 **Reto:** Dibuja Seno (azul) y Coseno (rojo) entre 0 y 4π.")
+    
+    codigo = """# 1. Crear datos del eje X
+x = np.linspace(0, 4*np.pi, 100)
+
+# 2. Calcular eje Y
+y_sen = np.sin(x)
+y_cos = np.cos(x)
+
+# 3. Dibujar
+plt.plot(x, y_sen, color='blue', label='Seno')
+# Descomenta la siguiente línea:
+# plt.plot(x, y_cos, color='red', label='Coseno')
+
+plt.legend()
+plt.grid()
+plt.title("Funciones Trigonométricas")
+"""
+    texto = st.text_area("Editor Gráfico:", value=codigo, height=350)
+    
+    if st.button("▶️ Generar Gráfica"):
+        res, tipo = ejecutar_codigo(texto)
+        if tipo == "plot":
+            st.pyplot(res)
+        elif tipo == "error":
+            st.error(res)
+        else:
+            st.warning("El código corrió, pero no generó gráfica (falta plt.plot)")
+            st.code(res)
+
+# ==============================================================================
+# SECCIÓN 7: RETO FINAL
+# ==============================================================================
+elif seccion == "7. Reto Final Hacker":
+    st.header("🏆 Generador de Contraseñas")
+    st.write("Usa `random.choice()` para crear una password segura de 8 caracteres.")
+    
+    codigo = """import random
+letras = "abcdefghijk123456789!@"
+password = ""
+
+for i in range(8):
+    # Tu código aquí
+    pass
+
+print(password)"""
+    
+    texto = st.text_area("Editor Hacker:", value=codigo, height=200)
+    if st.button("▶️ Generar"):
+        res, tipo = ejecutar_codigo(texto)
+        st.code(res)
